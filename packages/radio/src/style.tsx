@@ -3,8 +3,25 @@ import { RadioColorScheme, RadioSize, RadioStatus } from "./interface"
 import { SerializedStyles } from "@emotion/serialize"
 import { css } from "@emotion/react"
 
+const innerColor = [
+  "white",
+  "blackAlpha",
+  "gray",
+  "grayBlue",
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "blue",
+  "cyan",
+  "purple",
+  "techPink",
+  "techPurple",
+]
+
 // default radio
 export function applyRadioSize(colorScheme: RadioColorScheme) {
+  const isInnerColor = colorScheme && innerColor.indexOf(colorScheme) > -1
   return css`
     position: relative;
     appearance: none;
@@ -17,7 +34,9 @@ export function applyRadioSize(colorScheme: RadioColorScheme) {
     transition: 0.15s all linear;
 
     &:hover {
-      border-color: ${globalColor(`--${illaPrefix}-${colorScheme}-06`)};
+      border-color: ${isInnerColor
+        ? globalColor(`--${illaPrefix}-${colorScheme}-06`)
+        : colorScheme};
     }
 
     &:disabled {
@@ -27,14 +46,21 @@ export function applyRadioSize(colorScheme: RadioColorScheme) {
     }
 
     &:checked {
-      border: 4px solid ${globalColor(`--${illaPrefix}-${colorScheme}-01`)};
+      border: 4px solid
+        ${isInnerColor
+          ? globalColor(`--${illaPrefix}-${colorScheme}-01`)
+          : colorScheme};
 
       &:hover {
-        border-color: ${globalColor(`--${illaPrefix}-${colorScheme}-02`)};
+        border-color: ${isInnerColor
+          ? globalColor(`--${illaPrefix}-${colorScheme}-02`)
+          : colorScheme};
       }
 
       &:disabled {
-        border-color: ${globalColor(`--${illaPrefix}-${colorScheme}-05`)};
+        border-color: ${isInnerColor
+          ? globalColor(`--${illaPrefix}-${colorScheme}-05`)
+          : colorScheme};
       }
     }
   `
@@ -120,6 +146,8 @@ export function applyRadioButtonContainer(size?: RadioSize): SerializedStyles {
 
 export function applyRadioButton(stateValue: RadioStatus) {
   const { colorScheme } = stateValue
+  const isInnerColor = colorScheme && innerColor.indexOf(colorScheme) > -1
+
   let sizeCss,
     stateCss = css``
   switch (stateValue?.size) {
@@ -142,14 +170,17 @@ export function applyRadioButton(stateValue: RadioStatus) {
       `
       break
   }
-  const checkedColor =
-    colorScheme === "gray" || colorScheme === "grayBlue"
+  const checkedColor = isInnerColor
+    ? colorScheme === "gray" || colorScheme === "grayBlue"
       ? globalColor(`--${illaPrefix}-${colorScheme}-02`)
       : globalColor(`--${illaPrefix}-${colorScheme}-03`)
+    : colorScheme
 
   if (stateValue?.disabled && stateValue?.checked) {
     stateCss = css`
-      color: ${globalColor(`--${illaPrefix}-${colorScheme}-06`)};
+      color: ${isInnerColor
+        ? globalColor(`--${illaPrefix}-${colorScheme}-06`)
+        : colorScheme};
       cursor: not-allowed;
     `
   } else if (stateValue?.disabled) {

@@ -22,20 +22,24 @@ export function applyCheckboxSize(
   checked?: boolean,
   colorScheme?: CheckboxColorScheme,
 ) {
-  const _colorScheme =
-    colorScheme && innerColor.indexOf(colorScheme) > -1 ? colorScheme : "blue"
+  const isInnerColors = colorScheme && innerColor.indexOf(colorScheme) > -1
   let checkedCss = css()
   if (checked) {
     checkedCss = css`
       border-color: transparent;
-      background-color: ${globalColor(`--${illaPrefix}-${_colorScheme}-01`)};
-
+      background-color: ${isInnerColors
+        ? globalColor(`--${illaPrefix}-${colorScheme}-01`)
+        : colorScheme};
       &:hover {
-        background-color: ${globalColor(`--${illaPrefix}-${_colorScheme}-02`)};
+        background-color: ${isInnerColors
+          ? globalColor(`--${illaPrefix}-${colorScheme}-02`)
+          : colorScheme};
       }
 
       &:disabled {
-        background-color: ${globalColor(`--${illaPrefix}-${_colorScheme}-06`)};
+        background-color: ${isInnerColors
+          ? globalColor(`--${illaPrefix}-${colorScheme}-06`)
+          : colorScheme};
       }
     `
   }
@@ -50,7 +54,9 @@ export function applyCheckboxSize(
     cursor: pointer;
     transition: 0.15s all linear;
     &:hover {
-      border-color: ${globalColor(`--${illaPrefix}-${_colorScheme}-06`)};
+      border-color: ${isInnerColors
+        ? globalColor(`--${illaPrefix}-${colorScheme}-06`)
+        : colorScheme};
     }
 
     &:disabled {
