@@ -1,5 +1,5 @@
 import { css } from "@emotion/react"
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { BsFillArrowUpCircleFill } from "react-icons/bs"
 import { BackTop, BackTopProps } from "../src"
 
@@ -19,9 +19,9 @@ export default {
       <>
         <Story />
         <div
-          css={css`
-            white-space: pre-wrap;
-          `}
+          style={{
+            whiteSpace: "pre-wrap",
+          }}
         >
           {loremIpsumArticle}
         </div>
@@ -30,7 +30,7 @@ export default {
   ],
 } as Meta
 
-const Template: Story<BackTopProps> = (args) => <BackTop {...args} />
+const Template: StoryFn<BackTopProps> = (args) => <BackTop {...args} />
 
 export const Basic = Template.bind({})
 Basic.args = {}
@@ -48,9 +48,9 @@ CustomIcon.args = {}
 export const OtherTarget = (args) => {
   return (
     <div
-      css={css`
-        position: relative;
-      `}
+      style={{
+        position: "relative",
+      }}
     >
       <BackTop
         target={() => document.getElementById("target")}
@@ -59,10 +59,10 @@ export const OtherTarget = (args) => {
       ></BackTop>
       <div
         id="target"
-        css={css`
-          height: 300px;
-          overflow: auto;
-        `}
+        style={{
+          height: "300px",
+          overflow: "auto",
+        }}
       >
         {loremIpsumArticle}
       </div>

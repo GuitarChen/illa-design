@@ -1,9 +1,7 @@
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { Trigger, TriggerProps } from "../src"
 
-import { Button } from "@illa-design/button"
-import { Space } from "@illa-design/space"
-import { Input } from "@illa-design/input"
+import { Button, Space, Input } from "@illa-design/react"
 
 //👇 This default export determines where your story goes in the story list
 export default {
@@ -31,7 +29,7 @@ export default {
   },
 } as Meta
 
-export const Basic: Story<TriggerProps> = (args) => {
+export const Basic: StoryFn<TriggerProps> = (args) => {
   return (
     <div
       style={{

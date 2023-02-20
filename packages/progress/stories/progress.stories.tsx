@@ -1,6 +1,6 @@
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { Progress, ProgressProps } from "../src"
-import { Space } from "@illa-design/space"
+import { Space } from "@illa-design/react"
 
 //👇 This default export determines where your story goes in the story list
 export default {
@@ -8,7 +8,7 @@ export default {
   component: Progress,
 } as Meta
 
-export const Basic: Story<ProgressProps> = (args) => (
+export const Basic: StoryFn<ProgressProps> = (args) => (
   <Space direction="vertical">
     <Progress type="line" {...args} />
     <Progress type="circle" {...args} />

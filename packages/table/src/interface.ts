@@ -1,14 +1,8 @@
-import {
-  HTMLAttributes,
-  ReactNode,
-  TdHTMLAttributes,
-  ThHTMLAttributes,
-} from "react"
+import { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react"
 import { TableData } from "./table-data"
 import { BoxProps } from "@illa-design/theme"
-import { Column, ColumnDef } from "@tanstack/react-table"
-import { EmptyProps } from "@illa-design/empty"
 import {
+  ColumnDef,
   ColumnFiltersState,
   ColumnSort,
   FilterFnOption,
@@ -17,7 +11,8 @@ import {
   RowSelectionState,
   SortingState,
   VisibilityState,
-} from "@tanstack/table-core"
+} from "@tanstack/react-table"
+import { EmptyProps } from "@illa-design/empty"
 import { PaginationProps } from "@illa-design/pagination"
 
 export type TableSize = "small" | "medium" | "large"
@@ -34,10 +29,27 @@ export type TableAlign =
   | "flex-start"
   | "flex-end"
 
+export type TableColorScheme =
+  | string
+  | "white"
+  | "blackAlpha"
+  | "gray"
+  | "grayBlue"
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "cyan"
+  | "purple"
+  | "techPink"
+  | "techPurple"
+
 export interface TableProps<D extends TableData, TValue>
   extends HTMLAttributes<HTMLDivElement>,
     TableContextProps,
     BoxProps {
+  colorScheme?: TableColorScheme
   columns?: ColumnDef<D, TValue>[]
   data?: D[]
   pinedHeader?: boolean
@@ -51,14 +63,17 @@ export interface TableProps<D extends TableData, TValue>
   overFlow?: TableOverFlow
   pagination?: PaginationProps
   multiRowSelection?: boolean
+  enableRowSelection?: boolean
+  clickOutsideToResetRowSelect?: boolean
   checkAll?: boolean
   download?: boolean
   filter?: boolean
+  rowSelection?: RowSelectionState
   columnVisibility?: VisibilityState
   onSortingChange?: OnChangeFn<SortingState>
   onPaginationChange?: OnChangeFn<PaginationState>
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
-  onRowSelectionChange?: OnChangeFn<RowSelectionState>
+  onRowSelectionChange?: (rowSelection?: RowSelectionState) => void
 }
 
 export interface RowSelectionProps<D = any> {
@@ -81,6 +96,7 @@ export interface TBodyProps
 
 export interface TrProps extends HTMLAttributes<HTMLTableRowElement>, BoxProps {
   hoverable?: boolean
+  selected?: boolean
 }
 
 export interface TdProps
@@ -113,28 +129,47 @@ export interface ThProps
   lastRow?: boolean
 }
 
-export interface TableFilterProps<D extends TableData> extends BoxProps {
-  renderFilterContent?: (columnProps: Column<D, unknown>) => ReactNode
-  columnProps: Column<D, unknown>
-}
-
 export interface FiltersEditorProps {
+  colorScheme?: TableColorScheme
+  filterOperator: FilterOperator
   columnFilters: FilterOptionsState
   columnsOption: { value: string; label: string }[]
   onAdd: () => void
   onDelete: (index: number, columnFilters: FilterOptions) => void
   onChange: (index: number, columnFilters: FilterOptions) => void
-  onChangeFilterFn: (
-    index: number,
-    id: string,
-    filterFn: FilterFnOption<any>,
-  ) => void
+  onChangeOperator: (filterOperator: FilterOperator) => void
 }
+
+export type CustomFilterFn =
+  | "equalTo"
+  | "notEqualTo"
+  | "contains"
+  | "doesNotContain"
+  | "lessThan"
+  | "notLessThan"
+  | "moreThan"
+  | "notMoreThan"
+  | "empty"
+  | "notEmpty"
+  | "before"
+  | "after"
+
+export type FilterFn = FilterFnOption<any> & CustomFilterFn
 
 export type FilterOptions = {
   id: string
   value: unknown
-  filterFn?: FilterFnOption<any>
+  filterFn?: FilterFn
 }
 
 export type FilterOptionsState = FilterOptions[]
+
+export type FilterOperator = "and" | "or"
+
+export interface TableFilterProps {
+  onChange: (filters: FilterOptions[], operator: FilterOperator) => void
+  colorScheme?: TableColorScheme
+  filterOperator: FilterOperator
+  filterOption: FilterOptionsState
+  columnsOption: { value: string; label: string }[]
+}

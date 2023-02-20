@@ -1,33 +1,34 @@
 import { TableData } from "./table-data"
-import { FilterOptionsState, TableContextProps, TableProps } from "./interface"
-import { ReactElement, useCallback, useEffect, useMemo, useState } from "react"
+import {
+  FilterOperator,
+  FilterOptionsState,
+  TableContextProps,
+  TableProps,
+} from "./interface"
+import {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import {
   ColumnDef,
-  ColumnFilter,
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  PaginationState,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { FilterFnOption, PaginationState } from "@tanstack/table-core"
 import { Checkbox } from "@illa-design/checkbox"
-import { rankItem } from "@tanstack/match-sorter-utils"
 import {
-  contains,
-  doesNotContain,
+  customGlobalFn,
   downloadDataAsCSV,
-  empty,
-  equalTo,
-  lessThan,
-  moreThan,
-  notEmpty,
-  notEqualTo,
-  notLessThan,
-  notMoreThan,
   transformTableIntoCsvData,
 } from "./utils"
 import { isNumber, isString } from "@illa-design/system"
@@ -38,8 +39,9 @@ import {
   applyHeaderIconLeft,
   applyPreContainer,
   applyTableStyle,
-  applyToolBarStyle,
+  headerStyle,
   spinStyle,
+  toolBarStyle,
 } from "./style"
 import { applyBoxStyle, deleteCssProps } from "@illa-design/theme"
 import { Spin } from "@illa-design/spin"
@@ -49,7 +51,6 @@ import { Tr } from "./tr"
 import { Th } from "./th"
 import {
   DownloadIcon,
-  FilterIcon,
   SorterDefaultIcon,
   SorterDownIcon,
   SorterUpIcon,
@@ -59,9 +60,9 @@ import { Td } from "./td"
 import { Empty } from "@illa-design/empty"
 import { TFoot } from "./tfoot"
 import { Button } from "@illa-design/button"
-import { Trigger } from "@illa-design/trigger"
-import { FiltersEditor } from "./filters-editor"
 import { Pagination } from "@illa-design/pagination"
+import { TableFilter } from "./table-filter"
+import { useClickAway } from "react-use"
 
 export function RenderDataDrivenTable<D extends TableData, TValue>(
   props: TableProps<D, TValue>,
@@ -79,6 +80,7 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
     children,
     disableSortBy,
     pinedHeader,
+    colorScheme,
     align = "left",
     showFooter,
     hoverable,
@@ -86,10 +88,13 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
     emptyProps,
     columnVisibility,
     pagination,
-    multiRowSelection,
+    multiRowSelection = false,
+    enableRowSelection = true,
+    clickOutsideToResetRowSelect,
     checkAll = true,
     download,
     filter,
+    rowSelection: selected = {},
     defaultSort = [],
     onSortingChange,
     onPaginationChange,
@@ -108,12 +113,14 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
     showFooter,
   } as TableContextProps
 
+  const containerRef = useRef<HTMLDivElement>(null)
   const [sorting, setSorting] = useState<SortingState>(defaultSort)
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [filterOperator, setFilterOperator] = useState<FilterOperator>("and")
   const [filterOption, setFilterOption] = useState<FilterOptionsState>([
     { id: "", value: "" },
   ])
-  const [rowSelection, setRowSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState(selected)
   const [currentColumns, setColumns] = useState<ColumnDef<D, TValue>[]>(columns)
   const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -121,10 +128,15 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
   })
 
   const _columns = useMemo(() => {
-    if (multiRowSelection) {
+    const current = currentColumns?.filter((item) => {
+      // @ts-ignore accessorKey is not in the interface
+      return item.id || item.accessorKey
+    })
+    if (multiRowSelection && enableRowSelection) {
       const rowSelectionColumn: ColumnDef<D, TValue>[] = [
         {
-          id: "select",
+          accessorKey: "select",
+          enableSorting: false,
           header: checkAll
             ? ({ table }) => {
                 return (
@@ -153,39 +165,25 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
           },
         },
       ]
-      return rowSelectionColumn.concat(currentColumns)
+      return rowSelectionColumn.concat(current)
     }
-    return currentColumns
-  }, [checkAll, currentColumns, multiRowSelection])
+    return current
+  }, [checkAll, currentColumns, multiRowSelection, enableRowSelection])
+
+  const globalFilter = useMemo(() => {
+    return { filters: columnFilters, operator: filterOperator }
+  }, [columnFilters, filterOperator])
+
+  const enableMultiRowSelection = useMemo(() => {
+    return multiRowSelection && enableRowSelection
+  }, [multiRowSelection, enableRowSelection])
 
   const table = useReactTable({
     data,
     columns: _columns,
-    filterFns: {
-      fuzzy: (row, columnId, value, addMeta) => {
-        // Rank the item
-        const itemRank = rankItem(row.getValue(columnId), value)
-        // Store the itemRank info
-        addMeta({
-          itemRank,
-        })
-        // Return if the item should be filtered in/out
-        return itemRank.passed
-      },
-      equalTo,
-      notEqualTo,
-      contains,
-      doesNotContain,
-      lessThan,
-      notLessThan,
-      moreThan,
-      notMoreThan,
-      empty,
-      notEmpty,
-    },
     state: {
       columnVisibility,
-      columnFilters,
+      globalFilter,
       sorting,
       rowSelection,
       pagination: {
@@ -193,8 +191,9 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
         pageSize,
       },
     },
-    enableColumnFilters: true,
+    enableMultiRowSelection,
     enableSorting: !disableSortBy,
+    globalFilterFn: customGlobalFn,
     onPaginationChange: (pagination) => {
       setPagination(pagination)
       onPaginationChange?.(pagination)
@@ -208,8 +207,12 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
       onColumnFiltersChange?.(columnFilter)
     },
     onRowSelectionChange: (rowSelection) => {
-      setRowSelection(rowSelection)
-      onRowSelectionChange?.(rowSelection)
+      new Promise((resolve) => {
+        setRowSelection(rowSelection)
+        resolve(true)
+      }).then(() => {
+        onRowSelectionChange?.(table.getState().rowSelection)
+      })
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -218,11 +221,37 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
     manualPagination: overFlow === "scroll",
   })
 
+  useClickAway(containerRef, () => {
+    // when multiRowSelection is false, click outside the table, reset the row selection
+    if (clickOutsideToResetRowSelect && !multiRowSelection) {
+      table.resetRowSelection()
+    }
+  })
+
   useEffect(() => {
-    if (defaultSort?.length) {
+    if ("defaultSort" in props && defaultSort) {
       setSorting(defaultSort)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultSort])
+
+  useEffect(() => {
+    if (!enableMultiRowSelection) {
+      if (rowSelection && Object.keys(rowSelection)?.length > 1) {
+        const _selectedRow = { [Object.keys(rowSelection)[0]]: true }
+        setRowSelection(_selectedRow)
+        onRowSelectionChange?.(_selectedRow)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableMultiRowSelection])
+
+  useEffect(() => {
+    if (!enableRowSelection) {
+      table.resetRowSelection()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enableRowSelection])
 
   useEffect(() => {
     setColumns(columns)
@@ -230,21 +259,14 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
 
   useEffect(() => {
     if (pagination) {
-      const { pageSize: _pageSize, currentPage } = pagination
+      const { pageSize: _pageSize, current } = pagination
       setPagination({
-        pageIndex: isNumber(currentPage) ? currentPage : pageIndex,
+        pageIndex: isNumber(current) ? current : pageIndex,
         pageSize: isNumber(_pageSize) ? _pageSize : pageSize,
       })
     }
-  }, [pageIndex, pageSize, pagination])
-
-  useEffect(() => {
-    setColumnFilters(
-      filterOption.filter((item) => {
-        return item.id.length && item.value
-      }),
-    )
-  }, [filterOption])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination])
 
   const downloadTableDataAsCsv = useCallback(() => {
     const csvData = transformTableIntoCsvData(table, multiRowSelection)
@@ -255,75 +277,33 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
     })
   }, [table, multiRowSelection])
 
-  const ColumnsOption = useMemo(() => {
+  const columnsOption = useMemo(() => {
     const res: { value: string; label: string }[] = []
-    table.getAllColumns().forEach((column, index) => {
-      if (!(multiRowSelection && index === 0)) {
-        const label = column.columnDef.header
+    currentColumns.forEach((column, index) => {
+      // [TODO] fix ts-error @xiaoyu
+      // @ts-ignore custom is not in the interface
+      if (!(multiRowSelection && index === 0) && !column.custom) {
+        const label = column.header
         res.push({
-          value: column.id,
+          // @ts-ignore accessorKey is not in the interface
+          value: column.id || column.accessorKey,
           label: isString(label) ? label : "-",
         })
       }
     })
     return res
-  }, [multiRowSelection, table])
-
-  const updateColumns = useCallback(
-    (index: number, id: string, filterFn: FilterFnOption<D>) => {
-      if (!filterFn) return
-      const colIndex = currentColumns?.findIndex((current) => {
-        return current.id === id
-      })
-      const col = [...currentColumns]
-      if (col[colIndex]) {
-        col[colIndex].filterFn = filterFn
-        setColumns(col)
-      }
-    },
-    [currentColumns, setColumns],
-  )
-
-  const addOrUpdateFilters = useCallback(
-    (index?: number, filter?: ColumnFilter) => {
-      const filters = [...filterOption]
-      if (filters) {
-        if (isNumber(index) && filter && index < filters.length) {
-          filters[index] = filter
-        } else {
-          filters.push({ id: "", value: "" })
-        }
-      }
-      setFilterOption(filters)
-    },
-    [filterOption, setFilterOption],
-  )
-
-  const removeFilters = useCallback(
-    (index: number, id: string) => {
-      const filters = [...filterOption]
-      if (filters) {
-        filters.splice(index, 1)
-        if (filters.length == 0) {
-          filters.push({ id: "", value: "" })
-        }
-      }
-      setFilterOption(filters)
-      updateColumns(index, id, "auto")
-    },
-    [filterOption, setFilterOption, updateColumns],
-  )
+  }, [multiRowSelection, currentColumns])
 
   const onPageChange = useCallback(
     (pageNumber: number, pageSize: number) => {
-      setPagination({ pageIndex: pageNumber, pageSize })
-      table.setPageIndex(pageNumber)
+      setPagination({ pageIndex: pageNumber - 1, pageSize })
     },
-    [table, setPagination],
+    [setPagination],
   )
 
   return (
     <div
+      ref={containerRef}
       css={[
         applyContainerStyle(),
         applyBoxStyle(props),
@@ -359,12 +339,14 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
                           css={applyPreContainer(align)}
                           onClick={() => header.column.toggleSorting()}
                         >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
+                          {header.isPlaceholder ? null : (
+                            <span css={headerStyle}>
+                              {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext(),
                               )}
+                            </span>
+                          )}
                           {header.column.getCanSort() &&
                             (header.column.getIsSorted() ? (
                               header.column.getIsSorted() === "desc" ? (
@@ -383,8 +365,17 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
               </Thead>
             )}
             <TBody>
-              {table.getRowModel().rows.map((row) => (
-                <Tr key={row.id} hoverable>
+              {table.getRowModel().rows.map((row, index) => (
+                <Tr
+                  key={row.id}
+                  hoverable
+                  selected={enableRowSelection ? row.getIsSelected() : false}
+                  onClick={(e) => {
+                    if (enableRowSelection) {
+                      row.getToggleSelectedHandler()(e)
+                    }
+                  }}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <Td
                       key={cell.id}
@@ -407,13 +398,13 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
                   ))}
                 </Tr>
               ))}
-              {table.getRowModel().rows.length ? null : columns?.length ? (
+              {table.getRowModel().rows.length ? null : (
                 <tr>
                   <td colSpan={99} style={{ textAlign: "center" }}>
                     <Empty {...emptyProps} />
                   </td>
                 </tr>
-              ) : null}
+              )}
             </TBody>
             {showFooter && (
               <TFoot>
@@ -450,7 +441,7 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
         </TableContext.Provider>
       </Spin>
       {overFlow === "pagination" || download || filter ? (
-        <div css={applyToolBarStyle(bordered)}>
+        <div css={toolBarStyle}>
           <div css={applyActionButtonStyle(overFlow === "pagination")}>
             {download ? (
               <Button
@@ -461,42 +452,23 @@ export function RenderDataDrivenTable<D extends TableData, TValue>(
               />
             ) : null}
             {filter ? (
-              <Trigger
-                maxW="unset"
-                withoutPadding
-                showArrow={false}
-                closeWhenScroll={false}
-                colorScheme={"white"}
-                position={"bottom-end"}
-                trigger={"click"}
-                content={
-                  <FiltersEditor
-                    columnFilters={filterOption}
-                    columnsOption={ColumnsOption}
-                    onChange={(index, filters) => {
-                      addOrUpdateFilters(index, filters)
-                    }}
-                    onChangeFilterFn={updateColumns}
-                    onAdd={addOrUpdateFilters}
-                    onDelete={(index, filters) => {
-                      removeFilters(index, filters.id)
-                    }}
-                  />
-                }
-              >
-                <Button
-                  variant={"text"}
-                  colorScheme={"grayBlue"}
-                  leftIcon={<FilterIcon size={"16px"} />}
-                />
-              </Trigger>
+              <TableFilter
+                colorScheme={colorScheme}
+                filterOperator={filterOperator}
+                filterOption={filterOption}
+                columnsOption={columnsOption}
+                onChange={(filters, operator) => {
+                  setColumnFilters(filters)
+                  setFilterOperator(operator)
+                }}
+              />
             ) : null}
           </div>
           {overFlow === "pagination" ? (
             <Pagination
-              total={data.length}
+              total={Object.keys(table.getRowModel().rowsById).length}
               pageSize={pageSize}
-              currentPage={pageIndex}
+              current={pageIndex + 1}
               hideOnSinglePage={false}
               simple
               onChange={onPageChange}

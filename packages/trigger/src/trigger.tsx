@@ -1,14 +1,4 @@
-import {
-  cloneElement,
-  FC,
-  ReactElement,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
 import { TriggerProps } from "./interface"
-import { AnimatePresence, motion } from "framer-motion"
 import {
   applyAnimation,
   applyDefaultContentSize,
@@ -19,12 +9,21 @@ import {
   applyVerticalContainer,
 } from "./style"
 import {
+  TriangleBottom,
+  TriangleLeft,
+  TriangleRight,
+  TriangleTop,
+} from "./triangle"
+import { TriggerProviderContext } from "./trigger-context"
+import { css } from "@emotion/react"
+import {
   autoUpdate,
   flip,
   FloatingPortal,
   hide,
   Middleware,
   offset,
+  safePolygon,
   size,
   useClick,
   useDismiss,
@@ -32,17 +31,21 @@ import {
   useFocus,
   useHover,
   useInteractions,
+  useMergeRefs,
   useRole,
-} from "@floating-ui/react-dom-interactions"
-import { isFunction, mergeRefs } from "@illa-design/system"
-import {
-  TriangleBottom,
-  TriangleLeft,
-  TriangleRight,
-  TriangleTop,
-} from "./triangle"
-import { css } from "@emotion/react"
+} from "@floating-ui/react"
 import { applyBoxStyle } from "@illa-design/theme"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+  cloneElement,
+  FC,
+  ReactElement,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 export const Trigger: FC<TriggerProps> = (props) => {
   const {
@@ -69,11 +72,16 @@ export const Trigger: FC<TriggerProps> = (props) => {
     onVisibleChange,
     trigger = "hover",
     alignPoint,
+    renderInBody,
+    zIndex,
   } = props
 
   const tipsContainerRef = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState<boolean>(false)
   const finalVisible = popupVisible === undefined ? visible : popupVisible
+  const triggerContext = useContext(TriggerProviderContext)
+  const _renderInBody = renderInBody ?? triggerContext.renderInBody ?? true
+  const _zIndex = zIndex ?? triggerContext.zIndex ?? 1
 
   useEffect(() => {
     if (defaultPopupVisible) {
@@ -81,6 +89,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
         setVisible(true)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const middleware = useMemo(() => {
@@ -94,14 +103,11 @@ export const Trigger: FC<TriggerProps> = (props) => {
     if (autoAlignPopupWidth) {
       middleware.push(
         size({
-          apply({ rects }) {
-            if (autoAlignPopupWidth) {
-              if (tipsContainerRef?.current !== null) {
-                Object.assign(tipsContainerRef.current.style, {
-                  width: `${rects.reference.width}px`,
-                })
-              }
-            }
+          apply({ availableWidth, availableHeight, elements }) {
+            // Do things with the data, e.g.
+            Object.assign(elements.floating.style, {
+              width: `${childrenRef.current?.clientWidth}px`,
+            })
           },
         }),
       )
@@ -115,10 +121,12 @@ export const Trigger: FC<TriggerProps> = (props) => {
       placement: position,
       open: finalVisible,
       onOpenChange: (v) => {
-        if (popupVisible === undefined) {
-          setVisible(v)
+        if (!disabled && finalVisible !== v) {
+          if (popupVisible === undefined) {
+            setVisible(v)
+          }
+          onVisibleChange?.(v)
         }
-        onVisibleChange?.(v)
       },
       middleware: middleware,
       whileElementsMounted: autoUpdate,
@@ -128,11 +136,15 @@ export const Trigger: FC<TriggerProps> = (props) => {
     useHover(context, {
       enabled: trigger === "hover",
       move: true,
-      restMs: 100,
+      restMs: 200,
       delay: {
         open: openDelay,
         close: closeDelay,
       },
+      handleClose: safePolygon({
+        restMs: 200,
+        buffer: 1,
+      }),
     }),
     useClick(context, {
       enabled: trigger === "click",
@@ -144,7 +156,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
     }),
     useRole(context, { role: "tooltip" }),
     useDismiss(context, {
-      outsidePointerDown: clickOutsideToClose,
+      outsidePress: clickOutsideToClose,
       ancestorScroll: closeWhenScroll,
     }),
   ])
@@ -160,7 +172,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
     case "top-start":
     case "top-end":
       centerNode = (
-        <div css={applyVerticalContainer}>
+        <div css={applyVerticalContainer(autoAlignPopupWidth)}>
           <div
             ref={tipsContainerRef}
             css={applyTipsText(
@@ -187,7 +199,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
     case "bottom-start":
     case "bottom-end":
       centerNode = (
-        <div css={applyVerticalContainer}>
+        <div css={applyVerticalContainer(autoAlignPopupWidth)}>
           {showArrow && (
             <TriangleBottom
               w="8px"
@@ -214,7 +226,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
     case "right-start":
     case "right-end":
       centerNode = (
-        <div css={applyHorizontalContainer}>
+        <div css={applyHorizontalContainer(autoAlignPopupWidth)}>
           {showArrow && (
             <TriangleRight
               w="4px"
@@ -241,7 +253,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
     case "left-start":
     case "left-end":
       centerNode = (
-        <div css={applyHorizontalContainer}>
+        <div css={applyHorizontalContainer(autoAlignPopupWidth)}>
           <div
             ref={tipsContainerRef}
             css={applyTipsText(
@@ -268,7 +280,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
 
   const tipsNode = (
     <motion.div
-      css={applyMotionDiv()}
+      css={applyMotionDiv(autoAlignPopupWidth)}
       variants={applyAnimation(placement, showArrow)}
       initial="initial"
       animate="animate"
@@ -278,17 +290,26 @@ export const Trigger: FC<TriggerProps> = (props) => {
     </motion.div>
   )
 
+  const mergedRef = useMergeRefs([
+    reference,
+    (props.children as any).ref,
+    childrenRef,
+  ])
+
   return (
     <>
       {cloneElement(
         children as ReactElement,
         getReferenceProps({
           key: "illa-trigger",
-          ...(props.children as any).props,
-          ref: mergeRefs(reference, (props.children as any).ref, childrenRef),
+          ...(children as any).props,
+          ref: mergedRef,
           onContextMenu: (e) => {
-            if ((props.children as any).props.onContextMenu != undefined) {
-              ;(props.children as any).props.onContextMenu(e)
+            if (disabled) {
+              return
+            }
+            if ((children as any).props.onContextMenu != undefined) {
+              ;(children as any).props.onContextMenu(e)
             }
             if (trigger === "contextmenu") {
               e.preventDefault()
@@ -320,8 +341,8 @@ export const Trigger: FC<TriggerProps> = (props) => {
             }
           },
           onClick: (e) => {
-            if ((props.children as any).props.onClick != undefined) {
-              ;(props.children as any).props.onClick(e)
+            if ((children as any).props.onClick != undefined) {
+              ;(children as any).props.onClick(e)
             }
             if (alignPoint && trigger === "click") {
               if (childrenRef.current != null) {
@@ -342,7 +363,11 @@ export const Trigger: FC<TriggerProps> = (props) => {
           },
         }),
       )}
-      <FloatingPortal root={document.body}>
+      <FloatingPortal
+        root={
+          _renderInBody ? document.body : childrenRef?.current ?? document.body
+        }
+      >
         {!disabled && (
           <AnimatePresence>
             {finalVisible && (
@@ -350,6 +375,7 @@ export const Trigger: FC<TriggerProps> = (props) => {
                 css={[
                   css`
                     display: inline-flex;
+                    z-index: ${_zIndex};
                   `,
                   applyBoxStyle(props),
                 ]}

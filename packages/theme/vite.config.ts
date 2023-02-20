@@ -1,5 +1,5 @@
 import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
+import react from "@vitejs/plugin-react-swc"
 import typescript from "@rollup/plugin-typescript"
 
 const path = require("path")
@@ -9,24 +9,11 @@ export default defineConfig({
   plugins: [
     react({
       jsxImportSource: "@emotion/react",
-      jsxRuntime: "automatic",
-      babel: {
-        plugins: ["@emotion/babel-plugin"],
-        compact: false,
-      },
-      // Exclude storybook stories
-      exclude: [
-        /\.stories\.([tj])sx?$/,
-        /\.e2e\.([tj])sx?$/,
-        /\.test\.([tj])sx?$/,
-      ],
-      // Only .tsx files
-      include: ["**/*.tsx", "**/*.ts"],
     }),
   ],
   build: {
-    sourcemap: false,
-    minify: false,
+    sourcemap: true,
+    minify: "esbuild",
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "@illa-design/theme",
@@ -36,32 +23,33 @@ export default defineConfig({
       plugins: [
         typescript({
           tsconfig: path.resolve(__dirname, "tsconfig.json"),
-          rootDir: path.resolve(__dirname, "src"),
-          declaration: true,
-          declarationDir: path.resolve(__dirname, "dist/types"),
+          compilerOptions: {
+            rootDir: path.resolve(__dirname, "src"),
+            outDir: path.resolve(__dirname, "dist", "types"),
+            declaration: true,
+          },
+          include: path.resolve(__dirname, "src/**"),
           exclude: path.resolve(__dirname, "node_modules/**"),
         }),
       ],
       external: [
         "react",
         "react-dom",
-        "@illa-design/system",
-        "@emotion/cache",
         "@emotion/react",
-        "chroma-js",
-        "compute-scroll-into-view",
         "framer-motion",
+        "color",
+        "@illa-design/system",
+        "chroma-js",
       ],
       output: {
         globals: {
           react: "React",
           "react-dom": "ReactDom",
-          "@illa-design/system": "@illa-design/system",
-          "@emotion/cache": "@emotion/cache",
           "@emotion/react": "@emotion/react",
-          "chroma-js": "chroma-js",
-          "compute-scroll-into-view": "compute-scroll-into-view",
           "framer-motion": "framer-motion",
+          color: "color",
+          "@illa-design/system": "@illa-design/system",
+          "chroma-js": "chroma-js",
         },
       },
     },

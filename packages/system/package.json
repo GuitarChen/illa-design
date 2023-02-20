@@ -1,6 +1,6 @@
 {
   "name": "@illa-design/system",
-  "version": "1.0.4",
+  "version": "1.0.16",
   "description": "Illa Design base.",
   "keywords": [
     "system",
@@ -8,8 +8,8 @@
     "component"
   ],
   "sideEffects": false,
-  "author": "illa Family <opensource@illasoft.com>",
-  "homepage": "https://github.com/illa-family/illa-design",
+  "author": "ILLA Cloud <opensource@illasoft.com>",
+  "homepage": "https://github.com/illacloud/illa-design",
   "license": "Apache-2.0",
   "main": "dist/umd/index.js",
   "module": "dist/es/index.js",
@@ -29,32 +29,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/illa-family/illa-design.git",
+    "url": "git+https://github.com/illacloud/illa-design.git",
     "directory": "packages/system"
   },
   "bugs": {
-    "url": "https://github.com/illa-family/illa-design/issues"
+    "url": "https://github.com/illacloud/illa-design/issues"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.7"
   },
   "scripts": {
     "build": "vite build"
   },
-  "dependencies": {
-    "dayjs": "^1.10.7",
-    "number-precision": "^1.5.2",
-    "react-fast-compare": "^3.2.0",
-    "react-focus-lock": "^2.8.1",
-    "react-remove-scroll": "^2.5.4",
-    "react-use": "^17.4.0"
-  },
   "devDependencies": {
-    "@emotion/babel-plugin": "^11.7.2",
-    "@rollup/plugin-typescript": "^8.3.0",
-    "@types/chroma-js": "^2.1.3",
-    "@types/lodash": "^4.14.178",
-    "@types/react": "^17.0.48",
-    "@types/react-dom": "^17.0.17",
-    "@vitejs/plugin-react": "^1.3.2",
-    "typescript": "^4.5.2",
-    "vite": "^2.9.9"
+    "@vitejs/plugin-react-swc": "^3.0.1",
+    "@rollup/plugin-typescript": "^10.0.1"
   }
 }

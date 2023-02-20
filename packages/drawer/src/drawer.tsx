@@ -1,18 +1,9 @@
-import {
-  forwardRef,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
-import { findDOMNode } from "react-dom"
+import { forwardRef, useContext } from "react"
+import { createPortal } from "react-dom"
 import FocusLock from "react-focus-lock"
 import { RemoveScroll } from "react-remove-scroll"
 import { DrawerProps } from "./interface"
 import { AnimatePresence, motion } from "framer-motion"
-import { isServerRendering } from "@illa-design/system"
-import { Portal } from "@illa-design/modal"
 import {
   ConfigProviderContext,
   ConfigProviderProps,
@@ -22,7 +13,6 @@ import { CloseIcon } from "@illa-design/icon"
 import { Button } from "@illa-design/button"
 import {
   applyDrawerCloseIcon,
-  applyDrawerContent,
   applyDrawerFooter,
   applyDrawerHeader,
   applyDrawerMask,
@@ -32,6 +22,7 @@ import {
   applyDrawerTitle,
   applyDrawerWrapper,
   applyModalCancelBtn,
+  fullStyle,
   maskAnimation,
 } from "./style"
 import { applyBoxStyle, deleteCssProps } from "@illa-design/theme"
@@ -57,36 +48,16 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>((props, ref) => {
     onCancel,
     afterOpen,
     afterClose,
-    getPopupContainer = () => document.body,
     ...otherProps
   } = props
   const configProviderProps = useContext<ConfigProviderProps>(
     ConfigProviderContext,
   )
   const locale = configProviderProps?.locale?.drawer ?? def.drawer
-  const [shouldReComputeFixed, setShouldReComputeFixed] = useState(false)
-
-  const getContainer = useCallback((): HTMLElement => {
-    const container = getPopupContainer()
-    // eslint-disable-next-line react/no-find-dom-node
-    return (findDOMNode(container) || document.body) as HTMLElement
-  }, [getPopupContainer])
-
-  const isFixed = useMemo(() => {
-    return !isServerRendering && getContainer() === document.body
-  }, [shouldReComputeFixed, getContainer])
-
-  // thx arco
-  useEffect(() => {
-    if (visible && props.getPopupContainer) {
-      // Recompute `isFixed` to avoid style error resulting from truthy `isFixed` value due to the custom container dom is not mounted yet.
-      setShouldReComputeFixed(true)
-    }
-  }, [])
 
   const renderDrawer = () => {
     const element = (
-      <RemoveScroll>
+      <RemoveScroll css={fullStyle}>
         <div css={applyDrawerScroll} {...deleteCssProps(otherProps)}>
           {title && (
             <div css={applyDrawerHeader}>
@@ -98,7 +69,7 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>((props, ref) => {
               <CloseIcon />
             </div>
           )}
-          <div css={applyDrawerContent}>{children}</div>
+          {children}
           {footer && (
             <div css={applyDrawerFooter}>
               <Button
@@ -118,7 +89,7 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>((props, ref) => {
       </RemoveScroll>
     )
     return focusLock ? (
-      <FocusLock disabled={!visible} autoFocus={autoFocus}>
+      <FocusLock css={fullStyle} disabled={!visible} autoFocus={autoFocus}>
         {element}
       </FocusLock>
     ) : (
@@ -127,45 +98,48 @@ export const Drawer = forwardRef<HTMLDivElement, DrawerProps>((props, ref) => {
   }
 
   return (
-    <Portal container={getContainer()}>
-      <AnimatePresence>
-        {visible && (
-          <div ref={ref} css={applyDrawerWrapper(isFixed)}>
-            {mask ? (
+    <>
+      {createPortal(
+        <AnimatePresence>
+          {visible && (
+            <div ref={ref} css={applyDrawerWrapper(true)}>
+              {mask ? (
+                <motion.div
+                  variants={maskAnimation}
+                  animate="animate"
+                  exit="exit"
+                  initial="initial"
+                  transition={{ duration: 0.3 }}
+                  css={applyDrawerMask}
+                  onClick={(e) => {
+                    maskClosable && onCancel && onCancel(e)
+                  }}
+                />
+              ) : null}
               <motion.div
-                variants={maskAnimation}
+                variants={applyDrawerSlider(placement)}
                 animate="animate"
                 exit="exit"
                 initial="initial"
-                transition={{ duration: 3 }}
-                css={applyDrawerMask}
-                onClick={(e) => {
-                  maskClosable && onCancel && onCancel(e)
+                transition={{ duration: 0.3 }}
+                css={[applyDrawerStyle(w, h, placement), applyBoxStyle(props)]}
+                onAnimationComplete={(definition) => {
+                  if (definition === "animate") {
+                    afterOpen?.()
+                  }
+                  if (definition === "exit") {
+                    afterClose?.()
+                  }
                 }}
-              />
-            ) : null}
-            <motion.div
-              variants={applyDrawerSlider(placement)}
-              animate="animate"
-              exit="exit"
-              initial="initial"
-              transition={{ duration: 3 }}
-              css={[applyDrawerStyle(w, h, placement), applyBoxStyle(props)]}
-              onAnimationComplete={(definition) => {
-                if (definition === "animate") {
-                  afterOpen?.()
-                }
-                if (definition === "exit") {
-                  afterClose?.()
-                }
-              }}
-            >
-              {renderDrawer()}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </Portal>
+              >
+                {renderDrawer()}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
+    </>
   )
 })
 

@@ -1,6 +1,6 @@
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { PopConfirm, PopconfirmProps } from "../src"
-import { Button } from "@illa-design/button"
+import { Button } from "@illa-design/react"
 
 //👇 This default export determines where your story goes in the story list
 export default {
@@ -13,7 +13,7 @@ export default {
   },
 } as Meta
 
-export const Basic: Story<PopconfirmProps> = (args) => (
+export const Basic: StoryFn<PopconfirmProps> = (args) => (
   <div style={{ margin: "200px" }}>
     <PopConfirm {...args}>
       <Button>Click</Button>

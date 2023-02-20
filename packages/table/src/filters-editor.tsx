@@ -4,24 +4,26 @@ import { Button } from "@illa-design/button"
 import { AddIcon, DeleteIcon } from "@illa-design/icon"
 import { Select } from "@illa-design/select"
 import { Input } from "@illa-design/input"
-import { FiltersEditorProps } from "./interface"
+import { FilterFn, FilterOperator, FiltersEditorProps } from "./interface"
 import {
   editorButtonStyle,
   editorStyle,
   filterLabelStyle,
   filterStyle,
 } from "./style"
-import { FilterOptions } from "./utils"
+import { FilterOperatorOptions, FilterOptions } from "./utils"
 import { isString } from "@illa-design/system"
 
 export const FiltersEditor: FC<FiltersEditorProps> = (props) => {
   const {
+    filterOperator,
     columnFilters,
     columnsOption,
     onDelete,
     onAdd,
     onChange,
-    onChangeFilterFn,
+    onChangeOperator,
+    colorScheme,
   } = props
 
   const recordList = useMemo(() => {
@@ -31,36 +33,60 @@ export const FiltersEditor: FC<FiltersEditorProps> = (props) => {
           const { id, value, filterFn } = filter
           return (
             <div css={filterStyle} key={index}>
-              <div css={filterLabelStyle}>{index === 0 ? "Where" : "and"}</div>
+              <div css={filterLabelStyle}>
+                {index === 0 ? (
+                  "Where"
+                ) : index === 1 ? (
+                  <Select
+                    w="86px"
+                    colorScheme={colorScheme}
+                    value={filterOperator}
+                    options={FilterOperatorOptions}
+                    onChange={(operator) => {
+                      onChangeOperator(operator as FilterOperator)
+                    }}
+                  />
+                ) : (
+                  filterOperator
+                )}
+              </div>
               <Select
                 w="200px"
                 mg="8px 4px"
+                colorScheme={colorScheme}
                 value={id}
                 options={columnsOption}
                 onChange={(id) => {
-                  onChange(index, { id, value, filterFn })
+                  onChange(index, { ...filter, id: id as string })
                 }}
               />
               <Select
                 w="200px"
                 mg="8px 4px"
+                colorScheme={colorScheme}
                 value={filterFn as string}
                 options={FilterOptions}
                 onChange={(filterFn) => {
-                  onChangeFilterFn(index, filter.id, filterFn)
-                  onChange(index, { id, value, filterFn })
+                  if (filterFn != null) {
+                    let option = filterFn as FilterFn
+                    onChange(index, {
+                      ...filter,
+                      filterFn: option,
+                    })
+                  }
                 }}
               />
               <Input
                 w="200px"
                 mg="8px 4px"
+                colorScheme={colorScheme}
                 value={isString(value) ? value : undefined}
                 disabled={
                   (filterFn as string) === "empty" ||
                   (filterFn as string) === "notEmpty"
                 }
                 onChange={(value) => {
-                  onChange(index, { id, value, filterFn })
+                  onChange(index, { ...filter, value })
                 }}
               />
               <Button
@@ -80,7 +106,15 @@ export const FiltersEditor: FC<FiltersEditorProps> = (props) => {
         })}
       </>
     )
-  }, [columnFilters, columnsOption, onChange, onChangeFilterFn, onDelete])
+  }, [
+    colorScheme,
+    columnFilters,
+    columnsOption,
+    filterOperator,
+    onChange,
+    onChangeOperator,
+    onDelete,
+  ])
 
   return (
     <div css={editorStyle}>
@@ -88,7 +122,7 @@ export const FiltersEditor: FC<FiltersEditorProps> = (props) => {
       <span css={editorButtonStyle}>
         <Button
           pd="1px 8px"
-          colorScheme="techPurple"
+          colorScheme={colorScheme}
           size="medium"
           variant="text"
           onClick={onAdd}

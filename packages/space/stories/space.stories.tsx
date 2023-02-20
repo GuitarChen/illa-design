@@ -1,7 +1,7 @@
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { Space, SpaceProps } from "../src"
 
-import { Tag } from "@illa-design/tag"
+import { Tag } from "@illa-design/react"
 
 //👇 This default export determines where your story goes in the story list
 export default {
@@ -10,7 +10,7 @@ export default {
   component: Space,
 } as Meta
 
-const Template: Story<SpaceProps> = (props) => {
+const Template: StoryFn<SpaceProps> = (props) => {
   return (
     <Space
       {...props}

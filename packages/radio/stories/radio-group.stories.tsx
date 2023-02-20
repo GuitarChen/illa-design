@@ -1,5 +1,5 @@
-import { Meta, Story } from "@storybook/react"
-import { Space } from "@illa-design/space"
+import { Meta, StoryFn } from "@storybook/react"
+import { Space } from "@illa-design/react"
 import { RadioGroup, RadioGroupProps } from "../src"
 
 //👇 This default export determines where your story goes in the story list
@@ -15,10 +15,10 @@ export default {
   },
 } as Meta
 
-const Template: Story<RadioGroupProps<any>> = (args) => {
+const Template: StoryFn<RadioGroupProps<any>> = (args) => {
   return (
     <Space direction="vertical">
-      <RadioGroup w={"280px"} options={["A", "B", "C", "D"]} {...args} />
+      <RadioGroup w={"200px"} options={["A", "B", "C", "D"]} {...args} />
       <RadioGroup
         w={"280px"}
         options={["pear", "watermelon", "peach"]}

@@ -1,6 +1,5 @@
-import { Meta, Story } from "@storybook/react"
-import { Button } from "@illa-design/button"
-import { Notification } from "@illa-design/notification"
+import { Meta, StoryFn } from "@storybook/react"
+import { Button, useNotification } from "@illa-design/react"
 import { Affix, AffixProps } from "../src"
 import { CSSProperties, useRef } from "react"
 
@@ -27,7 +26,7 @@ const loremIpsum = Array(10)
   )
   .join("\n\n")
 
-export const Basic: Story<AffixProps> = (args) => {
+export const Basic: StoryFn<AffixProps> = (args) => {
   return (
     <>
       <Affix {...args}>
@@ -41,13 +40,15 @@ export const Basic: Story<AffixProps> = (args) => {
 export const Offset = () => {
   const offset = 200
 
+  const notification = useNotification()
+
   return (
     <>
       <div style={blockStyles}>{loremIpsum}</div>
       <Affix
         offsetTop={offset}
         onChange={(isFixed: boolean) =>
-          Notification.info({
+          notification.info({
             content: isFixed ? `Fixed ${offset}px from top!` : "Not fixed.",
           })
         }
@@ -62,8 +63,8 @@ export const Offset = () => {
   )
 }
 
-export const targetContainer = () => {
-  const container = useRef(null)
+export const TargetContainer = () => {
+  const container = useRef<HTMLDivElement | null>(null)
 
   return (
     <>

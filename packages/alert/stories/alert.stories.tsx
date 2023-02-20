@@ -1,8 +1,6 @@
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { Alert, AlertProps } from "../src"
-import { SearchIcon } from "@illa-design/icon"
-import { Space } from "@illa-design/space"
-import { Button } from "@illa-design/button"
+import { Button } from "@illa-design/react"
 
 export default {
   title: "FEEDBACK/Alert",
@@ -26,22 +24,20 @@ export default {
   },
 } as Meta
 
-const Template: Story<AlertProps> = (args) => {
+const Template: StoryFn<AlertProps> = (args) => {
   return (
-    <>
-      <Alert {...args} style={{ marginBottom: "12px" }} />
+    <div
+      style={{
+        width: "100%",
+      }}
+    >
+      <Alert {...args} mb="12px" content={undefined} />
       <Alert
         {...args}
-        icon={<SearchIcon />}
-        closeElement={<SearchIcon />}
-        action={
-          <Space direction={"vertical"}>
-            <Button size="small">Detail</Button>
-            <Button size="small">Close</Button>
-          </Space>
-        }
+        closable={true}
+        action={<Button size="small">Detail</Button>}
       />
-    </>
+    </div>
   )
 }
 

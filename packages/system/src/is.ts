@@ -42,10 +42,26 @@ export function isNumber(obj: any): obj is number {
   )
 }
 
+export function isFile(obj: any): obj is File {
+  return Object.prototype.toString.call(obj) === "[object File]"
+}
+
 export function isFunction<T extends Function = Function>(
   value: any,
 ): value is T {
   return typeof value === "function"
+}
+
+export function isUndefined(obj: any): obj is undefined {
+  return obj === undefined
+}
+
+export function isNull(obj: any): obj is null {
+  return obj === null
+}
+
+export function isNullOrUndefined(obj: any): boolean {
+  return obj === null || obj === undefined
 }
 
 // thx arco

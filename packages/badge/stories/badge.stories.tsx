@@ -1,11 +1,12 @@
-import { Meta, Story } from "@storybook/react"
-import { Avatar } from "@illa-design/avatar"
-import { SearchIcon } from "@illa-design/icon"
+import { Meta, StoryFn } from "@storybook/react"
+import {
+  Avatar,
+  Button,
+  ButtonGroup,
+  SearchIcon,
+  Space,
+} from "@illa-design/react"
 import { Badge, BadgeProps } from "../src"
-
-import { Space } from "@illa-design/space"
-
-import { Button, ButtonGroup } from "@illa-design/button"
 import { useState } from "react"
 
 //👇 This default export determines where your story goes in the story list
@@ -14,7 +15,7 @@ export default {
   component: Badge,
 } as Meta
 
-const Template: Story<BadgeProps> = (args) => {
+const Template: StoryFn<BadgeProps> = (args) => {
   const [num, setNum] = useState(0)
   return (
     <Space size={"large"}>

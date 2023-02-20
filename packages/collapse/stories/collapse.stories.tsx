@@ -1,6 +1,6 @@
-import { Meta, Story } from "@storybook/react"
-import { Collapse, CollapseProps } from "../src"
-import { ShareIcon } from "@illa-design/icon"
+import { Meta, StoryFn } from "@storybook/react"
+import { Collapse, CollapseItem, CollapseProps } from "../src"
+import { LikeFillIcon, ShareIcon, Space } from "@illa-design/react"
 
 export default {
   title: "DATA DISPLAY/Collapse",
@@ -18,21 +18,21 @@ export default {
   },
 } as Meta
 
-const CollapseItem = Collapse.Item
-
-export const Template: Story<CollapseProps> = (args) => {
+export const Template: StoryFn<CollapseProps> = (args) => {
   return (
-    <>
+    <div>
       <Collapse
         defaultActiveKey={["1", "2"]}
-        style={{ maxWidth: 1000, marginBottom: 20 }}
+        style={{
+          width: "100px",
+        }}
         {...args}
       >
         <CollapseItem
           header="Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get"
           name="1"
         >
-          Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get
+          header1
         </CollapseItem>
 
         <CollapseItem
@@ -40,14 +40,14 @@ export const Template: Story<CollapseProps> = (args) => {
           name="2"
           disabled
         >
-          Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get
+          header2
         </CollapseItem>
 
         <CollapseItem
           header="Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get"
           name="3"
         >
-          Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get
+          header3
         </CollapseItem>
       </Collapse>
       <Collapse
@@ -63,7 +63,7 @@ export const Template: Story<CollapseProps> = (args) => {
             <CollapseItem
               header="Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get."
               name="1.1"
-              extra={<ShareIcon />}
+              extra={<LikeFillIcon />}
             >
               Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get
             </CollapseItem>
@@ -82,12 +82,13 @@ export const Template: Story<CollapseProps> = (args) => {
           Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get
         </CollapseItem>
         <CollapseItem
+          disabled
           header="Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get"
           name="3"
         >
           Life-was-like-a-box-of-chocolates-you-never-know-what-your-gonna-get
         </CollapseItem>
       </Collapse>
-    </>
+    </div>
   )
 }

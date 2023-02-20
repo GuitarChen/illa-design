@@ -1,9 +1,9 @@
-import { Meta, Story } from "@storybook/react"
+import { Meta, StoryFn } from "@storybook/react"
 import { Tag, TagProps } from "../src"
 
 import { BsFacebook, BsTwitch, BsTwitter } from "react-icons/bs"
 
-import { Space } from "@illa-design/space"
+import { Space } from "@illa-design/react"
 
 //👇 This default export determines where your story goes in the story list
 export default {
@@ -17,7 +17,7 @@ export default {
   },
 } as Meta
 
-const Template: Story<TagProps> = (args) => {
+const Template: StoryFn<TagProps> = (args) => {
   return (
     <Space size="medium">
       <Tag {...args}>Hello</Tag>

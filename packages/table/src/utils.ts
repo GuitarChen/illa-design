@@ -1,6 +1,6 @@
-import { Table } from "@tanstack/table-core"
-import { FilterFn } from "@tanstack/table-core/src/features/Filters"
-import { isString } from "@illa-design/system"
+import { FilterFn, FilterMeta, Table } from "@tanstack/react-table"
+import { dayjsPro, isString } from "@illa-design/system"
+import { FilterOperator } from "./interface"
 
 export const transformTableIntoCsvData = (
   table: Table<any>,
@@ -161,6 +161,35 @@ export const doesNotContain: FilterFn<any> = (
   return false
 }
 
+export const before: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: unknown,
+) => {
+  const rowValue = row.getValue<string>(columnId)
+  if (isString(filterValue)) {
+    return dayjsPro(rowValue).isBefore(dayjsPro(filterValue))
+  }
+  return false
+}
+
+export const after: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: unknown,
+) => {
+  const rowValue = row.getValue<string>(columnId)
+  if (isString(filterValue)) {
+    return dayjsPro(rowValue).isAfter(dayjsPro(filterValue))
+  }
+  return false
+}
+
+export const FilterOperatorOptions = [
+  { label: "and", value: "and" },
+  { label: "or", value: "or" },
+]
+
 export const FilterOptions = [
   { label: "is equal to", value: "equalTo" },
   { label: "not equal to", value: "notEqualTo" },
@@ -170,4 +199,56 @@ export const FilterOptions = [
   { label: "not less than", value: "notLessThan" },
   { label: "more than", value: "moreThan" },
   { label: "not more than", value: "notMoreThan" },
+  { label: "is empty", value: "empty" },
+  { label: "is not empty", value: "notEmpty" },
+  { label: "before", value: "before" },
+  { label: "after", value: "after" },
 ]
+
+const FilterOptionsMap = {
+  equalTo,
+  notEqualTo,
+  contains,
+  doesNotContain,
+  lessThan,
+  notLessThan,
+  moreThan,
+  notMoreThan,
+  empty,
+  notEmpty,
+  before,
+  after,
+}
+
+type CustomFilterFn = keyof typeof FilterOptionsMap
+
+type GlobalFilterOptions = {
+  id: string
+  value: unknown
+  filterFn?: CustomFilterFn
+}[]
+
+export const customGlobalFn: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: { filters: GlobalFilterOptions; operator: FilterOperator },
+  addMeta: (meta: FilterMeta) => void,
+) => {
+  const { filters, operator } = filterValue
+  if (filters) {
+    const result = filters.map((filter) => {
+      const { value, filterFn, id } = filter
+      if (filterFn) {
+        const operator = FilterOptionsMap[filterFn]
+        return operator(row, id, value, addMeta)
+      }
+    })
+
+    if (operator === "and") {
+      return result.every((r) => r)
+    } else {
+      return result.some((r) => r)
+    }
+  }
+  return true
+}

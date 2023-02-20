@@ -1,6 +1,6 @@
 
 <div align="center">
-    <img alt="ILLA Design Logo" width="120px" height="120px" src="https://cdn.illafamily.com/logo.svg"/>
+    <img alt="ILLA Design Logo" width="120px" height="120px" src="./.github/assets/images/logo.svg"/>
 </div>
 
 <h1 align="center">ILLA Design</h1>
@@ -8,15 +8,16 @@
 <p align="center">Accelerate your internal tools development.</p>
 
 <div align="center">
-  <p>Create with ❤︎ by <a href="https://github.com/illa-family/illa-design/graphs/contributors">contributors</a></p>
+  <p>Create with ❤︎ by <a href="https://github.com/illacloud/illa-design/graphs/contributors">contributors</a></p>
 </div>
 
-![cover](https://cdn.illafamily.com/design-cover.png)
+![cover](./.github/assets/images/design-cover.png)
 
-[![Chat on Discord](https://img.shields.io/badge/chat-Discord-7289DA?logo=discord)](https://discord.gg/zKf3WKCufR)
-[![storybook](https://cdn.illafamily.com/storybook.svg)](https://design.illafamily.com)
-[![codecov](https://codecov.io/gh/illa-family/illa-design/branch/main/graph/badge.svg?token=GR2SOLBWQN)](https://codecov.io/gh/illa-family/illa-design)
-[![license](https://img.shields.io/github/license/illa-family/illa-design)](./LICENSE)
+[![Chat on Discord](https://img.shields.io/badge/chat-Discord-7289DA?logo=discord)](https://discord.gg/illacloud)
+[![Follow on Twitter](https://img.shields.io/badge/Twitter-1DA1F2?logo=twitter&logoColor=white)](https://twitter.com/illacloudHQ)
+[![storybook](./.github/assets/images/storybook.svg)](https://design.illafamily.com)
+[![codecov](https://codecov.io/gh/illacloud/illa-design/branch/main/graph/badge.svg?token=GR2SOLBWQN)](https://codecov.io/gh/illacloud/illa-design)
+[![license](https://img.shields.io/github/license/illacloud/illa-design)](./LICENSE)
 [![contributing](https://badgen.net/badge/PRs/Welcome/green?icon=storybook)](./CONTRIBUTING.md)
 
 ## ✨ Features
@@ -33,7 +34,7 @@
 
 You can review all components in Storybook.
 
-[![storybook](https://cdn.illafamily.com/storybook.svg)](https://design.illafamily.com)
+[![storybook](./.github/assets/images/storybook.svg)](https://design.illafamily.com)
 
 ## 🖥 Fast Try
 
@@ -46,11 +47,11 @@ You can quickly use ILLA Design on codesandbox.
 Step 1: Install
 
 ```bash
-$ yarn add @illa-design/react
+$ pnpm add @illa-design/react @emotion/react framer-motion
 
 # or
 
-$ npm i @illa-design/react
+$ npm i @illa-design/react @emotion/react framer-motion
 ```
 
 Step 2: Use
@@ -70,15 +71,15 @@ const App = () => (
 Step 1: Clone locally.
 
 ```bash
-$ git clone https://github.com/illa-family/illa-design.git
+$ git clone https://github.com/illacloud/illa-design.git
 $ cd illa-design
-$ yarn
+$ pnpm install
 ```
 
 Step 2: Run.
 
 ```bash
-$ yarn storybook
+$ pnpm storybook
 ```
 
 Then your can open storybook in your browser.
@@ -89,11 +90,11 @@ Join ILLA Community to share your ideas, suggestions or questions and connect wi
 
 <b>Discussion</b>
 
-[![Discuss on GitHub](https://img.shields.io/badge/discussions-GitHub-333333?logo=github)](https://github.com/orgs/illa-family/discussions)
+[![Discuss on GitHub](https://img.shields.io/badge/discussions-GitHub-333333?logo=github)](https://github.com/orgs/illacloud/discussions)
 
 <b>Hangout together!</b>
 
-[![Chat on Discord](https://img.shields.io/badge/chat-Discord-7289DA?logo=discord)](https://discord.gg/2tGBuJkgd6)
+[![Chat on Discord](https://img.shields.io/badge/chat-Discord-7289DA?logo=discord)](https://discord.gg/illacloud)
 
 ## 🌱 Contributing
 
